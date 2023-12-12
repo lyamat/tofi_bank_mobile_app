@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "358153740427",
+    "project_id": "tofi-867b8",
+    "storage_bucket": "tofi-867b8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358153740427:android:2adba7d10b5b1ba2fc348e",
+        "android_client_info": {
+          "package_name": "com.example.firebaseauthdemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaOPEGoqCOwrQocQkYWCyb5OTiJdGy9YQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
