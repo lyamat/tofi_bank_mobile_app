@@ -57,7 +57,7 @@
 
 
     <EditText
-        android:id="@+id/recieverPan"
+        android:id="@+id/reciever_pan"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
@@ -66,7 +66,7 @@
         android:fontFamily="@font/poppins_regular"
         android:gravity="center_vertical"
         android:hint="@string/enter_card_number"
-        android:inputType="number"
+        android:inputType="datetime"
         android:maxLength="19"
         android:maxLines="1"
         android:padding="8dp"
@@ -91,7 +91,7 @@
         android:textColor="@color/white"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/recieverPan" />
+        app:layout_constraintTop_toBottomOf="@id/reciever_pan" />
 
 
     <EditText
@@ -99,13 +99,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/ic_edit_text_back"
         android:fontFamily="@font/poppins_regular"
         android:gravity="center_vertical"
         android:hint="@string/enter_the_transfer_amount"
         android:inputType="numberDecimal"
-        android:maxLength="24"
+        android:maxLength="12"
         android:maxLines="1"
         android:padding="8dp"
         android:paddingStart="16dp"

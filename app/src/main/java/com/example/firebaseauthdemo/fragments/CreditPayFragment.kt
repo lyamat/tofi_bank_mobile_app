@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.example.firebaseauthdemo.R
 import com.example.firebaseauthdemo.databinding.FragmentPayCreditBinding
 import com.example.firebaseauthdemo.models.Credit
 import com.google.firebase.auth.FirebaseAuth
@@ -95,6 +96,8 @@ class CreditPayFragment : Fragment() {
                             "The credit has been successfully processed",
                             Toast.LENGTH_SHORT
                         ).show()
+                        replaceFragment(DashboardFragment())
+
                     } catch (e: Exception) {
                         Toast.makeText(
                             requireContext(),
@@ -185,4 +188,12 @@ class CreditPayFragment : Fragment() {
             }
         }
     }
+
+
+    private fun replaceFragment(fragment: Fragment) {
+        val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, fragment)
+        transaction.commit()
+    }
 }
+

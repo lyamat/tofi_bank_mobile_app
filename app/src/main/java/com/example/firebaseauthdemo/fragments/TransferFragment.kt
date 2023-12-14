@@ -11,8 +11,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import com.example.firebaseauthdemo.utils.CreditCardFormatWatcher
 import com.example.firebaseauthdemo.R
+import com.example.firebaseauthdemo.utils.DecimalDigitsInputFilter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +23,8 @@ import java.util.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
 class TransferFragment : Fragment(R.layout.fragment_transfer) {
@@ -44,7 +48,7 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
 
         val userUid = auth.currentUser!!.uid
 
-        val recieverPan: EditText = requireView().findViewById(R.id.recieverPan)
+        val recieverPan: EditText = requireView().findViewById(R.id.reciever_pan)
         val totalSum: EditText = requireView().findViewById(R.id.totalSum)
 
         val confirmBtn: Button = requireView().findViewById(R.id.confirm_btn)
@@ -67,18 +71,15 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
             replaceFragment(DashboardFragment())
         }
 
+        totalSum.filters = arrayOf(DecimalDigitsInputFilter(8, 2))
+
+
         recieverPan.addTextChangedListener(CreditCardFormatWatcher())
 
         confirmBtn.isEnabled = false
         confirmBtn.isClickable = false
 
         recieverPan.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val pan = s?.filter { it.isDigit() }
                 if (pan != null) {
@@ -91,6 +92,11 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
                         confirmBtn.isClickable = false
                     }
                 }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
         })
 
@@ -106,7 +112,8 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
                 .documents
                 .firstOrNull()
 
-            cardDocument?.getString("card_balance")!!.toDouble()
+            val roundedBalance =  cardDocument?.getString("card_balance")!!.toDouble()
+            roundedBalance.toBigDecimal().setScale(2, RoundingMode.UP).toDouble()
         }
 
         suspend fun transferMoney(userMainUid: String, receiverCardNumber: String, amountToSend: Double) = withContext(Dispatchers.IO) {
@@ -127,8 +134,10 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
             if (senderCardDocument != null && receiverCardDocument != null) {
                 val senderCardBalance = senderCardDocument.getString("card_balance")!!.toDouble()
 
-                senderCardDocument.reference.update("card_balance", (senderCardBalance - amountToSend).toString())
-                receiverCardDocument.reference.update("card_balance", (senderCardBalance + amountToSend).toString())
+
+
+                senderCardDocument.reference.update("card_balance", (senderCardBalance - amountToSend).toBigDecimal().setScale(2, RoundingMode.UP).toString())
+                receiverCardDocument.reference.update("card_balance", (senderCardBalance + amountToSend).toBigDecimal().setScale(2  , RoundingMode.UP).toString())
 
                 val transactionSenderId = senderCardDocument.getString("user_uid").toString()
                 val transactionReceiverId = receiverCardDocument.getString("user_uid").toString()
@@ -140,7 +149,7 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
                 val transaction = hashMapOf(
                     "transaction_sender_id" to transactionSenderId,
                     "transaction_receiver_id" to transactionReceiverId,
-                    "transaction_amount" to amountToSend.toString(),
+                    "transaction_amount" to amountToSend.toBigDecimal().setScale(2  , RoundingMode.UP).toString(),
                     "transaction_date" to currentDate.toString(),
                     "transaction_currency" to transactionCurrency
                 )
@@ -155,7 +164,7 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
             if (totalSum.text.toString().isNotEmpty()) {
                 loadingPb.isVisible = true
 
-                val amountToSend = totalSum.text.toString().filter { it.isDigit() }.toDouble() // сумма для отправки
+                val amountToSend = totalSum.text.toString().toDouble() // сумма для отправки
                 val receiverCardNumber = recieverPan.text.toString().trim().filter { it.isDigit() } // номер карточки для отправки
 
                 GlobalScope.launch(Dispatchers.Main) {
