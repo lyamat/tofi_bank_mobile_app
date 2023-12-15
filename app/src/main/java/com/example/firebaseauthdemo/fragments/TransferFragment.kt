@@ -73,7 +73,6 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
 
         totalSum.filters = arrayOf(DecimalDigitsInputFilter(8, 2))
 
-
         recieverPan.addTextChangedListener(CreditCardFormatWatcher())
 
         confirmBtn.isEnabled = false
@@ -104,21 +103,9 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
             db.collection("users_sec").document(userUid).get().await().getString("user_main_uid").toString()
         }
 
-        suspend fun fetchCardBalance(userMainUid: String) = withContext(Dispatchers.IO) {
-            val cardDocument = db.collection("cards")
-                .whereEqualTo("user_uid", userMainUid)
-                .get()
-                .await()
-                .documents
-                .firstOrNull()
-
-            val roundedBalance =  cardDocument?.getString("card_balance")!!.toDouble()
-            roundedBalance.toBigDecimal().setScale(2, RoundingMode.UP).toDouble()
-        }
-
-        suspend fun transferMoney(userMainUid: String, receiverCardNumber: String, amountToSend: Double) = withContext(Dispatchers.IO) {
+        suspend fun performTransaction(amount: Double, receiverCardNumber: String, senderMainUid: String): PerformTransactionResult {
             val senderCardDocument = db.collection("cards")
-                .whereEqualTo("user_uid", userMainUid)
+                .whereEqualTo("user_uid", senderMainUid)
                 .get()
                 .await()
                 .documents
@@ -134,69 +121,122 @@ class TransferFragment : Fragment(R.layout.fragment_transfer) {
             if (senderCardDocument != null && receiverCardDocument != null) {
                 val senderCardBalance = senderCardDocument.getString("card_balance")!!.toDouble()
 
+                if (senderCardBalance >= amount) {
+                    // Обновление баланса отправившего
+                    senderCardDocument.reference.update("card_balance",
+                        (senderCardBalance - amount).toBigDecimal().setScale(2, RoundingMode.UP)
+                            .toString()
+                    )
 
+                    // Обновление баланса получателя
+                    receiverCardDocument.reference.update("card_balance",
+                        (senderCardBalance + amount).toBigDecimal().setScale(2, RoundingMode.UP)
+                            .toString()
+                    )
 
-                senderCardDocument.reference.update("card_balance", (senderCardBalance - amountToSend).toBigDecimal().setScale(2, RoundingMode.UP).toString())
-                receiverCardDocument.reference.update("card_balance", (senderCardBalance + amountToSend).toBigDecimal().setScale(2  , RoundingMode.UP).toString())
+                    // Создание транзакции
+                    val transactionSenderId = senderCardDocument.getString("user_uid").toString()
+                    val transactionReceiverId =
+                        receiverCardDocument.getString("user_uid").toString()
+                    val transactionCurrency =
+                        senderCardDocument.getString("card_currency").toString()
 
-                val transactionSenderId = senderCardDocument.getString("user_uid").toString()
-                val transactionReceiverId = receiverCardDocument.getString("user_uid").toString()
-                val transactionCurrency = senderCardDocument.getString("card_currency").toString()
+                    val sdf = SimpleDateFormat("dd.MM.yyyy")
+                    val currentDate = sdf.format(Date())
 
-                val sdf = SimpleDateFormat("dd.MM.yyyy")
-                val currentDate = sdf.format(Date())
+                    val transaction = hashMapOf(
+                        "transaction_sender_id" to transactionSenderId,
+                        "transaction_receiver_id" to transactionReceiverId,
+                        "transaction_amount" to amount.toBigDecimal().setScale(2, RoundingMode.UP)
+                            .toString(),
+                        "transaction_date" to currentDate.toString(),
+                        "transaction_currency" to transactionCurrency
+                    )
 
-                val transaction = hashMapOf(
-                    "transaction_sender_id" to transactionSenderId,
-                    "transaction_receiver_id" to transactionReceiverId,
-                    "transaction_amount" to amountToSend.toBigDecimal().setScale(2  , RoundingMode.UP).toString(),
-                    "transaction_date" to currentDate.toString(),
-                    "transaction_currency" to transactionCurrency
-                )
+                    db.collection("transactions").add(transaction).await()
 
-                db.collection("transactions").add(transaction).await()
+//                    replaceFragment(TransferFragment())
+
+                    return PerformTransactionResult.Success
+                } else {
+                    return PerformTransactionResult.Error("Not enough money for transaction\nYour balance: $senderCardBalance")
+                }
             } else {
-                throw Exception("One of the cards does not exist")
+                return PerformTransactionResult.Error("One of the cards does not exist")
             }
         }
 
-        confirmBtn.setOnClickListener {
-            if (totalSum.text.toString().isNotEmpty()) {
-                loadingPb.isVisible = true
 
-                val amountToSend = totalSum.text.toString().toDouble() // сумма для отправки
-                val receiverCardNumber = recieverPan.text.toString().trim().filter { it.isDigit() } // номер карточки для отправки
+        confirmBtn.setOnClickListener {
+            if (totalSum.text.toString().isNotEmpty() && isValidAmount(totalSum.text.toString())) {
+                val amount = totalSum.text.toString().toDouble()
+                val receiverCardNumber = recieverPan.text.toString().trim().filter { it.isDigit() }
 
                 GlobalScope.launch(Dispatchers.Main) {
-                    try {
-                        val userMainUid = fetchUserMainUid(userUid)
-                        val cardBalance = fetchCardBalance(userMainUid)
-//
-                        if (cardBalance >= amountToSend) {
-                            transferMoney(userMainUid, receiverCardNumber, amountToSend)
-                            Toast.makeText(requireContext(), "Transfer successful", Toast.LENGTH_SHORT).show()
-
-
-                            replaceFragment(DashboardFragment())
-                            recieverPan.setText("")
-                            totalSum.setText("")
-
-                        } else {
-                            Toast.makeText(requireContext(), "Insufficient balance", Toast.LENGTH_SHORT).show()
-                        }
+                    val userMainUid = try {
+                        fetchUserMainUid(userUid)
                     } catch (e: Exception) {
-                        Log.d(TAG, "Error: ", e)
-                        Toast.makeText(requireContext(), "Transfer failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    } finally {
-                        loadingPb.isVisible = false
+                        Log.d(TAG, "Error fetching user main uid", e)
+                        Toast.makeText(requireContext(), "Error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val senderCardDocument = try {
+                        db.collection("cards")
+                            .whereEqualTo("user_uid", userMainUid)
+                            .get()
+                            .await()
+                            .documents
+                            .firstOrNull()
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Error fetching sender card document", e)
+                        Toast.makeText(requireContext(), "Error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    if (senderCardDocument != null) {
+                        val senderCardBalance = senderCardDocument.getString("card_balance")!!.toDouble()
+
+                        if (senderCardBalance >= amount) {
+                            if (amount > 5000) {
+                                // Запустить тест на трезвость
+                                val drunkTestFragment = DrunkTestFragment()
+                                drunkTestFragment.setOnDrunkTestCompleteListener(object : DrunkTestFragment.DrunkTestCompleteListener {
+                                    override fun onDrunkTestComplete(isDrunk: Boolean) {
+                                        if (isDrunk) {
+//                                            Toast.makeText(requireContext(), "Please sober up before making this transaction", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            GlobalScope.launch(Dispatchers.Main) {
+                                                performTransaction(amount, receiverCardNumber, userMainUid)
+                                            }
+                                        }
+                                    }
+                                })
+                                replaceFragment(drunkTestFragment)
+                            } else {
+                                performTransaction(amount, receiverCardNumber, userMainUid)
+                            }
+                        } else {
+                            Toast.makeText(requireContext(), "Not enough money for transaction\nYour balance: $senderCardBalance", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "One of the cards does not exist", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
                 Toast.makeText(requireContext(), "Enter the amount of money", Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
+    sealed class PerformTransactionResult {
+        object Success : PerformTransactionResult()
+        data class Error(val message: String) : PerformTransactionResult()
+    }
 
+    private fun isValidAmount(amountText: String): Boolean {
+        val amount = amountText.toDoubleOrNull() ?: return false
+        return amount > 0
     }
 
     private fun replaceFragment(fragment: Fragment) {

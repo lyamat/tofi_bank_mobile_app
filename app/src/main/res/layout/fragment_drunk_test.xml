@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/timer_tw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:paddingEnd="10dp"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="40dp"
+        tools:ignore="RtlSymmetry"
+        tools:text="00:17" />
+
+    <TextView
+        android:id="@+id/cur_number_tw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/black"
+        android:textSize="30sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/grid_layout"
+        tools:ignore="RtlSymmetry"
+        tools:text="Seven" />
+
+    <TextView
+        android:id="@+id/result_ms_tw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:fontFamily="@font/poppins_bold"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:textColor="@color/black"
+        android:textSize="30sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintBottom_toTopOf="@+id/start_test_btn"
+        app:layout_constraintEnd_toStartOf="@id/error_precent_tw"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cur_number_tw"
+        tools:ignore="RtlSymmetry"
+        tools:text="90 ms" />
+
+    <TextView
+        android:id="@+id/error_precent_tw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:textColor="@color/black"
+        android:textSize="30sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintBottom_toBottomOf="@+id/result_ms_tw"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/result_ms_tw"
+        app:layout_constraintTop_toTopOf="@+id/result_ms_tw"
+        tools:ignore="RtlSymmetry"
+        tools:text="15 %" />
+
+    <TextView
+        android:id="@+id/cancel_test_tw"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/valid_button_selector"
+        android:fontFamily="@font/poppins_medium"
+        android:text="Cancel"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="@+id/start_test_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/start_test_btn"
+        app:layout_constraintTop_toTopOf="@+id/start_test_btn" />
+
+
+    <Button
+        android:id="@+id/start_test_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/valid_button_selector"
+        android:fontFamily="@font/poppins_medium"
+        android:text="Start test"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cancel_test_tw" />
+
+    <TextView
+        android:id="@+id/text_view_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/timer_tw"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <GridLayout
+        android:id="@+id/grid_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timer_tw"
+        android:layout_marginTop="40dp">
+
+        <Button
+            android:id="@+id/button_1"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="1"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_2"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="2"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_3"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="3"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_4"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="4"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_5"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="5"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_6"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="6"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_7"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="7"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_8"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="8"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/button_9"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="9"
+            android:textSize="30sp" />
+
+    </GridLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
